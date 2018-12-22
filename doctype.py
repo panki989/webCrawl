@@ -14,3 +14,4 @@ items = [item for item in soup.contents if isinstance(item, Doctype)]
 data = items[0] if items else None
 
 print(data)
+page.close()

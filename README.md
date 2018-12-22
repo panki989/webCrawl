@@ -8,4 +8,9 @@ Steps to run the program mycode.py:
 
 Steps to run the program doctype.py:
 
-1. Change url name according to your choice in line 9.
+1. Change url according to your choice in line 9.
+
+
+Steps to run the program link.py:
+
+1. Change url name according to your choice in line 16.

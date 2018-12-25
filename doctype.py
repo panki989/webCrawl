@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-
+'''return doctype used by site'''
 import requests
 from bs4 import BeautifulSoup
 from bs4 import Doctype

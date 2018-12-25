@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+'''return links & buttons of site'''
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -13,7 +14,7 @@ class Link:
 
     def get_links(self):
         print('--------Links-------------')
-        self.driver.get('https://lms.iiitb.ac.in/moodle/login/index.php')
+        self.driver.get('https://login.yahoo.com')
         self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'a')))
         links = self.driver.find_elements_by_tag_name('a')
         for x in range(len(links)):
@@ -33,5 +34,7 @@ class Link:
 
 if __name__ == '__main__':
     obj = Link()
-    obj.get_links()
-    obj.quit()
+    try:
+        obj.get_links()
+    finally:
+        obj.quit()

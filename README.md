@@ -19,3 +19,8 @@ Steps to run the program link.py:
 Steps to run the program user_pwd.py:
 
 1. Change url name according to your choice in line 18.
+
+Steps to run the program outluk.py :
+
+1. Change email id in the line 33.
+2. Enter the correct password in line 40.

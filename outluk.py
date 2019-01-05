@@ -30,14 +30,14 @@ class Link:
 
             if val_type.strip() == 'email':
                 try:
-                    mail = "chaurasiap46@gmail.com"
+                    mail = "yourmail@gmail.com"
                     inputs[j].send_keys(mail)
                     inputs[j].send_keys(Keys.ENTER)
                     break
                 except:
                     print("Hidden text field!!!")
 
-        pwd = 'Javalko@123'
+        pwd = 'YourPwd'
         val = True
         while (val == True):
             try:

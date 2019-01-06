@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-'''fills the form in the site'''
+'''capture links in outlook'''
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -30,14 +30,14 @@ class Link:
 
             if val_type.strip() == 'email':
                 try:
-                    mail = "yourmail@gmail.com"
+                    mail = "mymail@gmail.com"
                     inputs[j].send_keys(mail)
                     inputs[j].send_keys(Keys.ENTER)
                     break
                 except:
                     print("Hidden text field!!!")
 
-        pwd = 'YourPwd'
+        pwd = 'your pwd'
         val = True
         while (val == True):
             try:
@@ -46,12 +46,14 @@ class Link:
                 input1.clear()
                 input1.send_keys(pwd)
                 self.wait.until(EC.text_to_be_present_in_element_value((By.NAME, 'passwd'), pwd), 5)
+                self.wait.until(EC.presence_of_all_elements_located((By.ID,'idSIButton9')))
                 input2 = self.driver.find_element(By.ID,'idSIButton9')    
                 input2.submit()
                 val = False
             except TimeoutException:
                 val = True
-                
+        
+        self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME,'button')))        
         input3 = self.driver.find_element(By.TAG_NAME,'button')
         input3.click()
 
@@ -68,4 +70,4 @@ class Link:
 if __name__ == '__main__':
     obj = Link()
     obj.fill_form()
-    obj.quit()
+    # obj.quit()

@@ -74,25 +74,29 @@ def ParseWordSepratedWithHyphen(txt):
     return strn
 
 def CheckAndExtractURL(str):
-    txt='\'href\': \'http://www.google.com/\''
+    # txt='\'href\': \'http://www.google.com/\''
 
-    re1='(.)'       # Any Single Character 1
-    re2='(href)'    # Word 1
-    re3='(.)'       # Any Single Character 2
-    re4='(.)'       # Any Single Character 3
-    re5='.*?'       # Non-greedy match on filler
-    re6='((?:http|https)(?::\\/{2}[\\w]+)(?:[\\/|\\.]?)(?:[^\\s"]*))'       # HTTP URL 1
+    # re1='(.)'       # Any Single Character 1
+    # re2='(href)'    # Word 1
+    # re3='(.)'       # Any Single Character 2
+    # re4='(.)'       # Any Single Character 3
+    # re5='.*?'       # Non-greedy match on filler
+    # re6='((?:http|https)(?::\\/{2}[\\w]+)(?:[\\/|\\.]?)(?:[^\\s"]*))'       # HTTP URL 1
 
-    rg = re.compile(re1+re2+re3+re4+re5+re6,re.IGNORECASE|re.DOTALL)
-    m = rg.search(str)
+    # rg = re.compile(re1+re2+re3+re4+re5+re6,re.IGNORECASE|re.DOTALL)
+    # m = rg.search(str)
+    # returnVal = "NO_MATCH"
+    # if m:
+    #     c1=m.group(1)
+    #     word1=m.group(2)
+    #     c2=m.group(3)
+    #     c3=m.group(4)
+    #     httpurl1=m.group(5)
+    #     returnVal = httpurl1
     returnVal = "NO_MATCH"
+    m = re.search(r'[a-zA-Z0-9]*href\':\s\'(.*?)\'', str)
     if m:
-        c1=m.group(1)
-        word1=m.group(2)
-        c2=m.group(3)
-        c3=m.group(4)
-        httpurl1=m.group(5)
-        returnVal = httpurl1
+      returnVal = m.group(1)
     return returnVal
 
 def FindAllURL(rawList):
@@ -107,15 +111,13 @@ def FindAllURL(rawList):
       ans= CheckAndExtractURL(ostr) # Test this contain INPUTELEMENT or not
       if ans != "NO_MATCH": 
          print(ans)
-         ans = ans[0:-2]
-         print(ans)
          listOfURL.append(ans)
     return listOfURL
 
 def FindAllInputs(rawList) :
     
     print("-------------------------------------------")
-    print("   ........ Extracting all INPUT ELEMENTS .")
+    print("........ Extracting all INPUT ELEMENTS ....")
     print("-------------------------------------------")
     listOfInputs = []
     for ostr in rawList: 
@@ -293,16 +295,22 @@ def ActivateElements(list):
 
         time.sleep(1)
     return
-def TravelURL(list):
+
+def TravelURL(list, home_link):
     l = len(list)
     i = 0
     for link in list:
       i = i  + 1
       print(i, "of" , l,link)
-      driver.get(link)    
+      print(link[0])
+      if link[0] != 'h' and link[0] != 'w':
+        driver.get(home_link+link)
+      else:
+        driver.get(link)
       time.sleep(7)
       driver.back()
     return
+
 def sprintf(buf, fmt, *args):
     buf.write(fmt % args)
 
@@ -322,9 +330,12 @@ def ScrapePage(LINK):
     time.sleep(5)
     response = requests.get(link) #get page data from server, block redirects
     sourceCode = response.content #get string of source code from response
+    print(sourceCode)
     print("----- Scrap page : Finding inputs ----- ")
     htmlElem = html.document_fromstring(sourceCode) #make HTML element object
-    tdElems = htmlElem.cssselect("INPUT") #list of all td elems
+    
+    tdElems = htmlElem.cssselect("input") #list of all td elems
+    print(tdElems)
     for elem in tdElems:
        if hasattr(elem, 'encode'):
            #print(elem.encode("utf-8"))
@@ -360,13 +371,19 @@ if __name__ == '__main__':
   #link = "https://www.youtube.com/" did not work
   #link = "https://www.manoramaonline.com/" 
   #link = "https://www.iiitb.ac.in/"  worked
-  #link = "https://www.instagram.com/"  
+  #link = "https://www.instagram.com"  
   #link = "https://www.amazon.com/"  
-  link = "https://www.facebook.com/"  
+  #link = "https://www.facebook.com"
+  #link = "http://www.cnn.com"
+  link = "http://www.yahoo.com" 
+  #link = "https://www.google.com"
 
   InitBrowser()
   rawInputList, rawlistOfURL =  ScrapePage(link)
   print(rawInputList)
+  print("----------------------ooo---------")
+  print(rawlistOfURL)
+  print(len(rawlistOfURL))
   inputList = FindAllInputs(rawInputList) 
   listOfURL = FindAllURL(rawlistOfURL)
   print("Length of input list",len(inputList))
@@ -376,7 +393,7 @@ if __name__ == '__main__':
      #print(inputList)
      ActivateElements(inputList)
      print("Total", len(listOfURL), "Found")
-     TravelURL(listOfURL)
+     TravelURL(listOfURL, link)
      ExitBrowser() 
   except RuntimeError:
      ExitBrowser() 

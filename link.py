@@ -11,6 +11,8 @@ import sys
 import time
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.common.exceptions import ElementNotVisibleException
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import ElementNotInteractableException
 
 class Link:
     def __init__(self):
@@ -45,7 +47,7 @@ class Link:
 
         print('--------Links-------------')
         self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'a')))
-        links = self.driver.find_elements_by_tag_name('a')
+        links = self.driver.find_elements(By.TAG_NAME, 'a')
         rawlink = []
         for x in range(len(links)):
             print(links[x].text, " : ", links[x].get_attribute('href'))
@@ -64,6 +66,8 @@ class Link:
                     self.driver.find_element(By.ID, field[2]).send_keys("text11")
                 except ElementNotVisibleException:
                     print("Hidden text input by CSS!!!")
+                except ElementNotInteractableException:
+                    print("Element is not reachble as of now!!!")
             elif field[0] == 'email':
                 try:
                     self.driver.find_element(By.ID, field[2]).send_keys("abc@mail.com")
@@ -75,7 +79,12 @@ class Link:
                 except ElementNotVisibleException:
                     print("Hidden password input by CSS!!!")
             elif field[0] == 'radio':
-                self.driver.find_element(By.ID, field[2]).click()
+                try:
+                    self.driver.find_element(By.ID, field[2]).click()
+                except NoSuchElementException:
+                    print("ID field is blank!!")
+                except ElementNotVisibleException:
+                    print("Radio button is hidden!!!")
             elif field[0] == 'submit':
                 # self.driver.find_element(By.ID, field[2]).click()
                 print("See you again!!!")
@@ -87,7 +96,7 @@ class Link:
 
         print('--------Inputs-------------')
         self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'input')))
-        inputs = self.driver.find_elements_by_tag_name('input')
+        inputs = self.driver.find_elements(By.TAG_NAME, 'input')
         input_details = []
         for y in range(len(inputs)):
             # print(inputs[y].get_attribute('type'), " : ",  inputs[y].get_attribute('value'),

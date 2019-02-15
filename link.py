@@ -13,20 +13,39 @@ from selenium.common.exceptions import InvalidArgumentException
 from selenium.common.exceptions import ElementNotVisibleException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
+import re
+import logging
 
 class Link:
     def __init__(self):
 
         self.driver = webdriver.Chrome()
         self.wait = WebDriverWait(self.driver, 5)
-        
-    def initDriver(self):
-
-        self.driver.get("https://"+sys.argv[1])
+    
+    def initDriver(self,url):
+        self.driver.get(url)
+        self.wait = WebDriverWait(self.driver, 5)
         self.performInput()
+        self.performButton()
         self.performerLink()
         
-        
+    def performButton(self):
+
+        rawbuttons = self.get_buttons()            #Get (class, id) for buttons
+
+    def get_buttons(self):
+
+        print('--------Buttons-------------')
+        self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'button')))
+        buttons = self.driver.find_elements(By.TAG_NAME, 'button')
+        rawbuttons = []
+        for x in range(len(buttons)):
+            print(buttons[x].get_attribute('class'), " : ", buttons[x].get_attribute('id'))
+            rawbuttons.append((buttons[x].get_attribute('class'),buttons[x].get_attribute('id')))
+        print("Total buttons ", len(buttons))
+        print('______________________________________________\n')
+        return rawbuttons
+    
     def performerLink(self):
 
         rawlinks = self.get_links()
@@ -58,12 +77,14 @@ class Link:
 
     def performInput(self):
 
-        inputs = self.get_inputs()   #list of [(type, value, id)]
+        inputs = self.get_inputs()   #list of [(type, name, id)]
         print(inputs)
         for field in inputs:
             if field[0] == 'text':
                 try:
                     self.driver.find_element(By.ID, field[2]).send_keys("text11")
+                except NoSuchElementException:
+                    self.driver.find_element(By.NAME, field[1]).send_keys("text12")
                 except ElementNotVisibleException:
                     print("Hidden text input by CSS!!!")
                 except ElementNotInteractableException:
@@ -102,18 +123,40 @@ class Link:
             # print(inputs[y].get_attribute('type'), " : ",  inputs[y].get_attribute('value'),
                 # " : ", inputs[y].get_attribute('id'))
             if inputs[y].get_attribute('type').strip() != 'hidden':
-                input_details.append((inputs[y].get_attribute('type'),inputs[y].get_attribute('value'),
+                input_details.append((inputs[y].get_attribute('type'),inputs[y].get_attribute('name'),
                  inputs[y].get_attribute('id')))
 
         print("Total fields ", len(input_details))
         return input_details
 
-    def quit(self):
+    def Quit(self):
         self.driver.quit()
 
 if __name__ == '__main__':
-    obj = Link()
-    try:
-        obj.initDriver()
-    finally:
-        obj.quit()
+    
+    def checkURL(url):
+        regex = re.compile(
+        r'^(?:http|ftp)s?://' # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+        r'localhost|' #localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        r'(?::\d+)?' # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        return re.match(regex, url) is not None
+
+    if len(sys.argv) == 1:
+        print("Enter the site to crawl:")
+        str = input()
+    else:
+        str = sys.argv[1]
+        
+    url = "https://"+str
+    if checkURL(url):
+        obj = Link()
+        try:
+            obj.initDriver(url)
+        finally:
+            obj.Quit()        
+    else:
+        print("Invalid URL given!!!")
+    

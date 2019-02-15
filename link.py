@@ -14,7 +14,6 @@ from selenium.common.exceptions import ElementNotVisibleException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
 import re
-import logging
 
 class Link:
     def __init__(self):
@@ -149,8 +148,12 @@ if __name__ == '__main__':
         str = input()
     else:
         str = sys.argv[1]
-        
-    url = "https://"+str
+    
+    if checkURL(str):
+        url = str
+    else:
+        url = "https://"+str
+    
     if checkURL(url):
         obj = Link()
         try:

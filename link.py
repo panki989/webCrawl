@@ -145,7 +145,7 @@ if __name__ == '__main__':
         return re.match(regex, url) is not None
 
     if len(sys.argv) == 1:
-        print("Enter the site to crawl:")
+        print("Enter the site to crawl:(Without https/http)")
         str = input()
     else:
         str = sys.argv[1]

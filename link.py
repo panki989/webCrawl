@@ -9,10 +9,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import sys
 import time
-from selenium.common.exceptions import InvalidArgumentException
+# from selenium.common.exceptions import InvalidArgumentException
 from selenium.common.exceptions import ElementNotVisibleException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
+from selenium.common.exceptions import InvalidSelectorException
+from selenium.common.exceptions import TimeoutException
 import re
 
 class Link:
@@ -30,36 +32,73 @@ class Link:
         
     def performButton(self):
 
-        rawbuttons = self.get_buttons()            #Get (class, id) for buttons
+        rawbuttons = self.get_buttons()              #Get (id, name, class) for buttons
+        prev_url = self.driver.current_url
+        for field in rawbuttons:
+            try:
+                self.driver.find_element(By.ID, field[0]).click()
+            # except NoSuchElementException:
+            #     self.driver.find_element(By.NAME, field[1]).click()
+            except ElementNotVisibleException:
+                print("Hidden buttons in page!!!")
+            except NoSuchElementException:
+                try:
+                    self.driver.find_element(By.NAME, field[1]).click()
+                except NoSuchElementException:
+                    try:
+                        self.driver.find_element(By.CLASS_NAME, field[2]).click()
+                    except NoSuchElementException:
+                        print("All fields are blank!!!!")
+                    except InvalidSelectorException:
+                        print("Multiple class arguments are given....")
+            
+            curr_url = self.driver.current_url
+            time.sleep(5)
+            if prev_url != curr_url:
+                print("Page changed......")
+                time.sleep(4)
+                self.driver.get(prev_url)
+                self.performInput()
+            else:
+                print("alert & other links need to be catched!!!")
+
+
 
     def get_buttons(self):
 
         print('--------Buttons-------------')
-        self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'button')))
+        try:
+            self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'button')))
+        except TimeoutException:
+            pass
         buttons = self.driver.find_elements(By.TAG_NAME, 'button')
         rawbuttons = []
         for x in range(len(buttons)):
-            print(buttons[x].get_attribute('class'), " : ", buttons[x].get_attribute('id'))
-            rawbuttons.append((buttons[x].get_attribute('class'),buttons[x].get_attribute('id')))
-        print("Total buttons ", len(buttons))
+            print(buttons[x].get_attribute('id'), " : ", buttons[x].get_attribute('name'),
+                " : ", buttons[x].get_attribute('class'))
+            rawbuttons.append((buttons[x].get_attribute('id'),buttons[x].get_attribute('name'),
+                buttons[x].get_attribute('class')))
+        print("Total buttons ", len(rawbuttons))
         print('______________________________________________\n')
         return rawbuttons
     
     def performerLink(self):
 
         rawlinks = self.get_links()
+        testURL = LinkValidation()
         for i in range(len(rawlinks)):
-            self.driver.execute_script("window.open('');")
-            time.sleep(3)
-            self.driver.switch_to.window(self.driver.window_handles[1])
-            try:
+            if testURL.checkURL("%s" % (rawlinks[i])):  
+                self.driver.execute_script("window.open('');")
+                time.sleep(3)
+                self.driver.switch_to.window(self.driver.window_handles[1])
+                # try:
                 self.driver.get(rawlinks[i])
-            except InvalidArgumentException:
-                print("Invalid type url is catched!!!")
-            time.sleep(3)
-            self.driver.close()
-            time.sleep(3)
-            self.driver.switch_to.window(self.driver.window_handles[0])
+                # except InvalidArgumentException:
+                #     print("Invalid type url is catched!!!")
+                time.sleep(3)
+                self.driver.close()
+                time.sleep(3)
+                self.driver.switch_to.window(self.driver.window_handles[0])
 
     def get_links(self):
 
@@ -115,7 +154,10 @@ class Link:
     def get_inputs(self):
 
         print('--------Inputs-------------')
-        self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'input')))
+        try:
+            self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'input')))
+        except TimeoutException:
+            pass
         inputs = self.driver.find_elements(By.TAG_NAME, 'input')
         input_details = []
         for y in range(len(inputs)):
@@ -131,9 +173,9 @@ class Link:
     def Quit(self):
         self.driver.quit()
 
-if __name__ == '__main__':
-    
-    def checkURL(url):
+class LinkValidation:
+
+    def checkURL(self, url):
         regex = re.compile(
         r'^(?:http|ftp)s?://' # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
@@ -143,18 +185,21 @@ if __name__ == '__main__':
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
         return re.match(regex, url) is not None
 
+if __name__ == '__main__':
+    
     if len(sys.argv) == 1:
         print("Enter the site to crawl:(Without https/http)")
         str = input()
     else:
         str = sys.argv[1]
     
-    if checkURL(str):
+    testURL = LinkValidation()
+    if testURL.checkURL(str):
         url = str
     else:
         url = "https://"+str
     
-    if checkURL(url):
+    if testURL.checkURL(url):
         obj = Link()
         try:
             obj.initDriver(url)

@@ -15,6 +15,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import InvalidSelectorException
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import WebDriverException
 import re
 
 class Link:
@@ -35,6 +36,7 @@ class Link:
         rawbuttons = self.get_buttons()              #Get (id, name, class) for buttons
         prev_url = self.driver.current_url
         for field in rawbuttons:
+            print(field)
             try:
                 self.driver.find_element(By.ID, field[0]).click()
             # except NoSuchElementException:
@@ -47,10 +49,12 @@ class Link:
                 except NoSuchElementException:
                     try:
                         self.driver.find_element(By.CLASS_NAME, field[2]).click()
-                    except NoSuchElementException:
-                        print("All fields are blank!!!!")
                     except InvalidSelectorException:
                         print("Multiple class arguments are given....")
+                    except NoSuchElementException:
+                        print("All fields are blank!!!!")
+                    except WebDriverException:
+                        print("Element present but not clickable!!!")
             
             curr_url = self.driver.current_url
             time.sleep(5)
@@ -122,7 +126,16 @@ class Link:
                 try:
                     self.driver.find_element(By.ID, field[2]).send_keys("text11")
                 except NoSuchElementException:
-                    self.driver.find_element(By.NAME, field[1]).send_keys("text12")
+                    try:
+                        self.driver.find_element(By.NAME, field[1]).send_keys("text12")
+
+                    except ElementNotInteractableException:
+                        print("Element is not reachble as of NOW!!!")
+                    except NoSuchElementException:
+                        print("All fields are blank,It seems!!!")
+                    except ElementNotVisibleException:
+                        print("Input is hidden!!!")
+                
                 except ElementNotVisibleException:
                     print("Hidden text input by CSS!!!")
                 except ElementNotInteractableException:

@@ -7,30 +7,39 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
-import sys
-import time
-# from selenium.common.exceptions import InvalidArgumentException
+
 from selenium.common.exceptions import ElementNotVisibleException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import InvalidSelectorException
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import WebDriverException
+# from selenium.common.exceptions import InvalidArgumentException
 import re
+import sys
+import time
 
 class Link:
+    
     def __init__(self):
 
         self.driver = webdriver.Chrome()
         self.wait = WebDriverWait(self.driver, 5)
     
+    
     def initDriver(self,url):
         self.driver.get(url)
         self.wait = WebDriverWait(self.driver, 5)
-        self.performInput()
-        self.performButton()
-        self.performerLink()
+        try:
+            error = self.driver.find_element(By.CLASS_NAME, 'error-code')
+            print(error.text)
+        except NoSuchElementException:
+            print("Valid web page!!!")
+            self.performInput()
+            self.performButton()
+            self.performerLink()
         
+    
     def performButton(self):
 
         rawbuttons = self.get_buttons()              #Get (id, name, class) for buttons
@@ -39,8 +48,6 @@ class Link:
             print(field)
             try:
                 self.driver.find_element(By.ID, field[0]).click()
-            # except NoSuchElementException:
-            #     self.driver.find_element(By.NAME, field[1]).click()
             except ElementNotVisibleException:
                 print("Hidden buttons in page!!!")
             except NoSuchElementException:
@@ -65,7 +72,7 @@ class Link:
                 self.performInput()
             else:
                 print("alert & other links need to be catched!!!")
-
+        print('______________________________________________\n')
 
 
     def get_buttons(self):
@@ -73,18 +80,28 @@ class Link:
         print('--------Buttons-------------')
         try:
             self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'button')))
+            self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'input')))
         except TimeoutException:
             pass
         buttons = self.driver.find_elements(By.TAG_NAME, 'button')
+        submit_input = self.driver.find_elements(By.TAG_NAME, 'input')
         rawbuttons = []
         for x in range(len(buttons)):
             print(buttons[x].get_attribute('id'), " : ", buttons[x].get_attribute('name'),
                 " : ", buttons[x].get_attribute('class'))
             rawbuttons.append((buttons[x].get_attribute('id'),buttons[x].get_attribute('name'),
                 buttons[x].get_attribute('class')))
+        
+        for x in range(len(submit_input)):
+            if submit_input[x].get_attribute('type').strip() == 'submit':
+                print(submit_input[x].get_attribute('id'), " : ", submit_input[x].get_attribute('name'),
+                    " : ", submit_input[x].get_attribute('class'))
+                rawbuttons.append((submit_input[x].get_attribute('id'),submit_input[x].get_attribute('name'),
+                    submit_input[x].get_attribute('class')))
+
         print("Total buttons ", len(rawbuttons))
-        print('______________________________________________\n')
         return rawbuttons
+    
     
     def performerLink(self):
 
@@ -95,15 +112,19 @@ class Link:
                 self.driver.execute_script("window.open('');")
                 time.sleep(3)
                 self.driver.switch_to.window(self.driver.window_handles[1])
-                # try:
+                
                 self.driver.get(rawlinks[i])
-                # except InvalidArgumentException:
-                #     print("Invalid type url is catched!!!")
+                try:
+                    error = self.driver.find_element(By.CLASS_NAME, 'error-code')
+                    print(error.text)
+                except NoSuchElementException:
+                    print("Valid web page!!!")
                 time.sleep(3)
                 self.driver.close()
                 time.sleep(3)
                 self.driver.switch_to.window(self.driver.window_handles[0])
 
+    
     def get_links(self):
 
         print('--------Links-------------')
@@ -117,6 +138,7 @@ class Link:
         print('______________________________________________\n')
         return rawlink
 
+    
     def performInput(self):
 
         inputs = self.get_inputs()   #list of [(type, name, id)]
@@ -128,14 +150,12 @@ class Link:
                 except NoSuchElementException:
                     try:
                         self.driver.find_element(By.NAME, field[1]).send_keys("text12")
-
                     except ElementNotInteractableException:
                         print("Element is not reachble as of NOW!!!")
                     except NoSuchElementException:
                         print("All fields are blank,It seems!!!")
                     except ElementNotVisibleException:
                         print("Input is hidden!!!")
-                
                 except ElementNotVisibleException:
                     print("Hidden text input by CSS!!!")
                 except ElementNotInteractableException:
@@ -143,11 +163,24 @@ class Link:
             elif field[0] == 'email':
                 try:
                     self.driver.find_element(By.ID, field[2]).send_keys("abc@mail.com")
+                except ElementNotInteractableException:
+                    print("Input field is there but not intractable due to javascript!!!")
                 except ElementNotVisibleException:
-                    print("Hidden mail input by CSS!!!")    
+                    print("Hidden mail input by CSS!!!")   
             elif field[0] == 'password':
                 try:
                     self.driver.find_element(By.ID, field[2]).send_keys("MyPa55w@rd")
+                except NoSuchElementException:
+                    try:
+                       self.driver.find_element(By.NAME, field[1]).send_keys("MyPa55w@rd")
+                    except ElementNotInteractableException:
+                        print("Password filed is not intractable due to javascript!!!")
+                    except ElementNotVisibleException:
+                        print("Hidden password field in page!!!")
+                    except NoSuchElementException:
+                        print("All fields seems to be empty!!!")
+                except ElementNotInteractableException:
+                        print("Password filed is not intractable due to JAVAscript!!!")
                 except ElementNotVisibleException:
                     print("Hidden password input by CSS!!!")
             elif field[0] == 'radio':
@@ -157,13 +190,12 @@ class Link:
                     print("ID field is blank!!")
                 except ElementNotVisibleException:
                     print("Radio button is hidden!!!")
-            elif field[0] == 'submit':
-                # self.driver.find_element(By.ID, field[2]).click()
-                print("See you again!!!")
             else:
                 print("Need to catch the type ",field[0])
+
         print('______________________________________________\n')
 
+    
     def get_inputs(self):
 
         print('--------Inputs-------------')
@@ -174,20 +206,22 @@ class Link:
         inputs = self.driver.find_elements(By.TAG_NAME, 'input')
         input_details = []
         for y in range(len(inputs)):
-            # print(inputs[y].get_attribute('type'), " : ",  inputs[y].get_attribute('value'),
-                # " : ", inputs[y].get_attribute('id'))
             if inputs[y].get_attribute('type').strip() != 'hidden':
-                input_details.append((inputs[y].get_attribute('type'),inputs[y].get_attribute('name'),
-                 inputs[y].get_attribute('id')))
+                if inputs[y].get_attribute('type').strip() != 'submit':
+                   input_details.append((inputs[y].get_attribute('type'),inputs[y].get_attribute('name'),
+                        inputs[y].get_attribute('id'))) 
 
-        print("Total fields ", len(input_details))
+        print("Total fields ",len(input_details))
         return input_details
 
+    
     def Quit(self):
         self.driver.quit()
 
-class LinkValidation:
 
+
+class LinkValidation:
+    
     def checkURL(self, url):
         regex = re.compile(
         r'^(?:http|ftp)s?://' # http:// or https://
@@ -220,4 +254,3 @@ if __name__ == '__main__':
             obj.Quit()        
     else:
         print("Invalid URL given!!!")
-    

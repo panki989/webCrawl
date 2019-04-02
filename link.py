@@ -34,10 +34,16 @@ class Link:
             error = self.driver.find_element(By.CLASS_NAME, 'error-code')
             print(error.text)
         except NoSuchElementException:
-            print("Valid web page!!!")
-            self.performInput()
-            self.performButton()
-            self.performerLink()
+            testURL = Validation()
+            message = self.driver.title
+            print(message)
+            if testURL.checkTEXT(message):
+                print("Invalid Web page/ Page not found error!!!")
+            else:
+                print("Valid web page!!!")
+                self.performInput()
+                self.performButton()
+                self.performerLink()
         
     
     def performButton(self):
@@ -106,7 +112,7 @@ class Link:
     def performerLink(self):
 
         rawlinks = self.get_links()
-        testURL = LinkValidation()
+        testURL = Validation()
         for i in range(len(rawlinks)):
             if testURL.checkURL("%s" % (rawlinks[i])):  
                 self.driver.execute_script("window.open('');")
@@ -118,7 +124,11 @@ class Link:
                     error = self.driver.find_element(By.CLASS_NAME, 'error-code')
                     print(error.text)
                 except NoSuchElementException:
-                    print("Valid web page!!!")
+                    message = self.driver.title
+                    if testURL.checkTEXT(message):
+                        print("Invalid Web page/ Page not found error!!!")
+                    else:
+                        print("Valid web page!!!")
                 time.sleep(3)
                 self.driver.close()
                 time.sleep(3)
@@ -220,7 +230,7 @@ class Link:
 
 
 
-class LinkValidation:
+class Validation:
     
     def checkURL(self, url):
         regex = re.compile(
@@ -232,6 +242,14 @@ class LinkValidation:
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
         return re.match(regex, url) is not None
 
+    
+    def checkTEXT(self, msg):
+        regex = re.compile(
+            r'\w*(not found)\w*', re.IGNORECASE)
+        return re.search(regex, msg) is not None
+
+
+
 if __name__ == '__main__':
     
     if len(sys.argv) == 1:
@@ -240,7 +258,7 @@ if __name__ == '__main__':
     else:
         str = sys.argv[1]
     
-    testURL = LinkValidation()
+    testURL = Validation()
     if testURL.checkURL(str):
         url = str
     else:

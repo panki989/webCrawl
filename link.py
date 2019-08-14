@@ -59,6 +59,8 @@ class Link:
             except NoSuchElementException:
                 try:
                     self.driver.find_element(By.NAME, field[1]).click()
+                except ElementNotVisibleException:
+                    print("Element is hidden!!!")
                 except NoSuchElementException:
                     try:
                         self.driver.find_element(By.CLASS_NAME, field[2]).click()
@@ -66,9 +68,11 @@ class Link:
                         print("Multiple class arguments are given....")
                     except NoSuchElementException:
                         print("All fields are blank!!!!")
+                    except ElementNotVisibleException:
+                        print("Element is HIDDEN!!!")
                     except WebDriverException:
                         print("Element present but not clickable!!!")
-            
+
             curr_url = self.driver.current_url
             time.sleep(5)
             if prev_url != curr_url:
